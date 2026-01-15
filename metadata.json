@@ -1,0 +1,5 @@
+{
+  "name": "Sentinel Fraud AI",
+  "description": "An end-to-end credit card fraud detection platform using AI for automated preprocessing, model evaluation, and deployment simulation.",
+  "requestFramePermissions": []
+}
