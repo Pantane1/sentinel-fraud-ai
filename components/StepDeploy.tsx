@@ -23,12 +23,11 @@ interface StepDeployProps {
 const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
   const [deployment, setDeployment] = useState<ModelDeployment>({
     endpoint: 'https://api.sentinel-fraud.ai/v1/predict',
-    status: 'deploying', // Start as deploying for visual effect
+    status: 'deploying',
     createdAt: new Date().toISOString(),
     version: 'SENTINEL-1.0-STABLE'
   });
 
-  // Simulate deployment completion
   useEffect(() => {
     const timer = setTimeout(() => {
       setDeployment(prev => ({ ...prev, status: 'active' }));
@@ -42,7 +41,6 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Real-time JSON validation
   const validation = useMemo(() => {
     try {
       if (!testPayload.trim()) return { isValid: false, message: "Payload cannot be empty" };
@@ -127,16 +125,13 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* API Details */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-            
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-white font-semibold">Deployment Info</h3>
               <ShieldCheck className="w-5 h-5 text-slate-700" />
             </div>
-            
             <div className="space-y-4 relative z-10">
               <div>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Service Endpoint</p>
@@ -147,7 +142,6 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
                   </button>
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Version</p>
@@ -160,7 +154,6 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
               </div>
             </div>
           </div>
-
           <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6">
             <h3 className="text-white font-semibold mb-4 flex items-center gap-2 text-sm">
               <Zap className="w-4 h-4 text-blue-400" />
@@ -176,7 +169,6 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
           </div>
         </div>
 
-        {/* API Playground */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
             <div className="flex items-center justify-between mb-6">
@@ -193,7 +185,6 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
                 </button>
               </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -242,7 +233,6 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
                   )}
                 </div>
               </div>
-
               <div className="space-y-4">
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Model Response</p>
                 <div className="h-[258px] bg-slate-950 border border-slate-800 rounded-2xl p-4 overflow-y-auto custom-scrollbar">
@@ -255,7 +245,6 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
                       </div>
                     </div>
                   )}
-                  
                   {prediction ? (
                     <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
                       <div className={`p-4 rounded-xl flex items-center justify-between border ${
@@ -275,7 +264,6 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
                           <p className="text-lg font-mono text-white">{(prediction.probability * 100).toFixed(1)}%</p>
                         </div>
                       </div>
-                      
                       <div className="space-y-2">
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Decision Reasoning</p>
                         <p className="text-xs text-slate-400 leading-relaxed">{prediction.reasoning}</p>
@@ -291,7 +279,6 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
               </div>
             </div>
           </div>
-
           <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6">
             <h3 className="text-white font-semibold mb-4 text-sm flex items-center gap-2">
               <Code className="w-4 h-4 text-blue-400" />
