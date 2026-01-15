@@ -11,7 +11,7 @@
 
 ## 📖 Documentation
 For detailed operational instructions, technical specs, and owner contact information, please refer to the:
-### 👉 [USER_MANUAL.md](./USER_MANUAL.md)
+### 👉 [USER_MANUAL](./USER_MANUAL.md)
 
 ## 🚀 Key Features
 
