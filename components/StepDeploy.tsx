@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ModelMetrics, ModelDeployment } from '../types';
 import { geminiService } from '../services/geminiService';
 import { 
@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   ShieldAlert,
   AlertCircle,
-  Activity
+  Activity,
+  Code
 } from 'lucide-react';
 
 interface StepDeployProps {
@@ -41,6 +42,17 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Real-time JSON validation
+  const validation = useMemo(() => {
+    try {
+      if (!testPayload.trim()) return { isValid: false, message: "Payload cannot be empty" };
+      JSON.parse(testPayload);
+      return { isValid: true, message: null };
+    } catch (e: any) {
+      return { isValid: false, message: e.message || "Malformed JSON structure" };
+    }
+  }, [testPayload]);
+
   const copyEndpoint = () => {
     navigator.clipboard.writeText(deployment.endpoint);
     setCopied(true);
@@ -52,17 +64,13 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
       setError("Model is not active. Please wait for deployment to complete.");
       return;
     }
+    if (!validation.isValid) return;
+
     setLoading(true);
     setError(null);
     setPrediction(null);
     try {
-      let payload;
-      try {
-        payload = JSON.parse(testPayload);
-      } catch (e) {
-        throw new Error("Invalid JSON format. Please check your syntax.");
-      }
-      
+      const payload = JSON.parse(testPayload);
       const result = await geminiService.predictFraud(payload, metrics);
       setPrediction(result);
     } catch (err: any) {
@@ -188,24 +196,43 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Input Body (JSON)</p>
-                <textarea 
-                  value={testPayload}
-                  onChange={(e) => setTestPayload(e.target.value)}
-                  className="w-full h-48 bg-slate-950 border border-slate-800 rounded-2xl p-4 font-mono text-sm text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                />
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Input Body (JSON)</p>
+                  {!validation.isValid && (
+                    <div className="flex items-center gap-1.5 text-red-500 text-[9px] font-bold uppercase animate-pulse">
+                      <AlertCircle className="w-3 h-3" />
+                      Invalid Syntax
+                    </div>
+                  )}
+                </div>
+                <div className="relative">
+                  <textarea 
+                    value={testPayload}
+                    onChange={(e) => setTestPayload(e.target.value)}
+                    className={`w-full h-48 bg-slate-950 border rounded-2xl p-4 font-mono text-sm transition-all focus:outline-none focus:ring-2 ${
+                      validation.isValid 
+                        ? 'border-slate-800 text-blue-300 focus:ring-blue-500/20' 
+                        : 'border-red-500/50 text-red-300 focus:ring-red-500/10'
+                    }`}
+                  />
+                  {!validation.isValid && (
+                    <div className="mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded-lg text-[10px] text-red-400 font-mono leading-tight">
+                      {validation.message}
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleTest}
-                    disabled={loading || deployment.status !== 'active'}
+                    disabled={loading || deployment.status !== 'active' || !validation.isValid}
                     className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg ${
-                      deployment.status === 'active' 
-                      ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/10' 
-                      : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      deployment.status === 'active' && validation.isValid
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/10 active:scale-95' 
+                      : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50'
                     }`}
                   >
                     <Play className="w-4 h-4 fill-current" />
-                    {deployment.status === 'active' ? 'Invoke Endpoint' : 'System Not Active'}
+                    {deployment.status === 'active' ? (validation.isValid ? 'Invoke Endpoint' : 'Fix JSON to Invoke') : 'System Not Active'}
                   </button>
                   {loading && (
                     <div className="flex flex-col items-center gap-1 px-2 animate-in fade-in slide-in-from-left-2">
@@ -218,7 +245,7 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
 
               <div className="space-y-4">
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Model Response</p>
-                <div className="h-[258px] bg-slate-950 border border-slate-800 rounded-2xl p-4 overflow-y-auto">
+                <div className="h-[258px] bg-slate-950 border border-slate-800 rounded-2xl p-4 overflow-y-auto custom-scrollbar">
                   {error && (
                     <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
@@ -266,8 +293,11 @@ const StepDeploy: React.FC<StepDeployProps> = ({ metrics }) => {
           </div>
 
           <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6">
-            <h3 className="text-white font-semibold mb-4 text-sm">Implementation Snippet</h3>
-            <pre className="bg-slate-900/50 p-4 rounded-xl overflow-x-auto text-[11px] font-mono text-slate-400 border border-slate-800">
+            <h3 className="text-white font-semibold mb-4 text-sm flex items-center gap-2">
+              <Code className="w-4 h-4 text-blue-400" />
+              Implementation Snippet
+            </h3>
+            <pre className="bg-slate-900/50 p-4 rounded-xl overflow-x-auto text-[11px] font-mono text-slate-400 border border-slate-800 custom-scrollbar">
               <code>{curlExample}</code>
             </pre>
           </div>
